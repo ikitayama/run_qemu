@@ -1525,8 +1525,12 @@ edk2_vmf_get_images()
 
 get_aavmf_binaries()
 {
+	if [[ ! $aavmf_path ]]; then
+		echo "Unable to determine AAVMF path for $_distro"
+		exit 1
+        fi
 	if ! [ -e "AAVMF_CODE.fd" ] && ! [ -e "AAVMF_VARS.fd" ]; then
-                if [ ! -f "$aavmf_path/AAMVF_CODE.fd" ]; then
+                if [ ! -f "$aavmf_path/AAVMF_CODE.fd" ]; then
                         echo "AAVMF binaries not found, please install '[edk2-]ovmf' or similar, 'edk2-shell', ..."
                         exit 1
                 fi
