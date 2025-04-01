@@ -731,6 +731,7 @@ build_kernel_cmdline()
 		"rw"
 		"initcall_debug"
 		"log_buf_len=20M"
+		"dax=never"
 		"memory_hotplug.memmap_on_memory=force"
 	)
 	if [[ $_arg_gdb == "on" ]]; then
