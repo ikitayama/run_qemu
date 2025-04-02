@@ -18,8 +18,7 @@ pmem_final_size="$((pmem_size + pmem_label_size))"
 selftests_home=root/built-selftests
 : "${mkosi_bin:=mkosi}"
 mkosi_opts=("-i" "-f")
-#console="ttyS0"
-console="ttyAMA0"
+console="ttyS0"
 accel="kvm"
 
 arch=$(uname -m)
@@ -1712,6 +1711,7 @@ prepare_qcmd()
 		qcmd+=("-drive" "if=pflash,format=raw,unit=1,file=${edk2_vmf_vars}")
 	qcmd+=("-drive" "file=$_arg_rootfs,format=raw,media=disk,if=none,id=hd0")
 	qcmd+=("-device" "virtio-blk-pci,drive=hd0,serial="dummyserial"")
+
 	if [ $_arg_direct_kernel = "on" ] && [ -n "$vmlinuz" ] && [ -n "$initrd" ]; then
 		qcmd+=("-kernel" "$vmlinuz" "-initrd" "$initrd")
 		qcmd+=("-append" "${kcmd[*]}")
@@ -1737,9 +1737,9 @@ prepare_qcmd()
 		qcmd+=("-cpu" "max")
 	fi
 
-        # If not "-cpu" option not set, Linux won't boot 
+	# If not "-cpu" option not set, Linux won't boot
 	#
-	if [[ $(arch) == aarch64 ]]; then
+	if [[ $(arch) == "aarch64" ]]; then
 		qcmd+=("-cpu" "max")
 	fi
 
