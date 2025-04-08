@@ -1586,7 +1586,8 @@ prepare_qcmd()
 	[[ $mac_lower =~ (..)(..)(..) ]] && guestmac+=("${BASH_REMATCH[@]:1}")
 	mac_addr=$(IFS=:; echo "${guestmac[*]}")
 
-	qcmd+=("-device" "e1000,netdev=net0,mac=$mac_addr")
+	#qcmd+=("-device" "e1000,netdev=net0,mac=$mac_addr")
+	qcmd+=("-device" "virtio-net-pci,netdev=net0")
 	qcmd+=("-netdev" "user,id=net0,hostfwd=tcp::$hostport-:22")
 
 	if [[ $_arg_kvm = "on" ]]; then
