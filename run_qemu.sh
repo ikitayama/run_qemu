@@ -683,7 +683,7 @@ mount_rootfs()
 	mp="mnt"
 
 	pushd "$builddir" > /dev/null || exit 1
-	test -s "$_arg_rootfs"
+	test -s "$_arg_rootfs" || fail 'Missing rootfs=%s' "$_arg_rootfs"
 	mkdir -p "$mp"
 
 	sudo losetup -Pf "$_arg_rootfs"
@@ -731,7 +731,6 @@ build_kernel_cmdline()
 		"initcall_debug"
 		"log_buf_len=20M"
 		"memory_hotplug.memmap_on_memory=force"
-                "memmap=1G$0x100000000"
 	)
 	if [[ $_arg_gdb == "on" ]]; then
 		kcmd+=( 
@@ -839,7 +838,6 @@ update_rootfs_boot_kernel()
 	fi
 
 	mount_rootfs 1 # EFI system partition
-	conffile="$builddir/mnt/loader/entries/run-qemu-kernel-$kver.conf"
 
 	sudo sfdisk -l "${loopdev}" || sudo parted "${loopdev}" print || true
 
@@ -876,6 +874,7 @@ update_rootfs_boot_kernel()
 	echo "default run-qemu-kernel-$kver.conf" | sudo tee -a "$defconf"
 
 	# Fedora
+	# TODO: don't even bother when not using OVMF
 	sudo cp "$ovmf_path"/Shell.efi "$builddir"/mnt/shellx64.efi ||
 		# Arch Linux
 		sudo cp /usr/share/edk2-shell/x64/Shell_Full.efi "$builddir"/mnt/shellx64.efi ||
@@ -1073,7 +1072,7 @@ prepare_ndctl_build()
 	# supported. So, we concatenate. One drawback: you must manually delete
 	# qbuild/mkosi.postinst when changing this code below.
 	if test -e "$postinst" && grep -q 9b626c647037bc8a "$postinst"; then
-	        return
+		return
 	fi
 	cat <<- 'EOF' >> "$postinst"
 		#!/bin/sh
@@ -1418,8 +1417,8 @@ get_ovmf_binaries()
 	fi
 	if ! [ -e "OVMF_CODE.fd" ] && ! [ -e "OVMF_VARS.fd" ]; then
 		if [ ! -f "$ovmf_path/OVMF_CODE.fd" ]; then
-			echo "OVMF binaries not found, please install '[edk2-]ovmf' or similar, 'edk2-shell', ..."
-			exit 1
+			fail 'OVMF_*.fd binaries not found, please install "[edk2-]ovmf" or similar, "edk2-shell", ...
+	or try  --legacy-bios'
 		fi
 		cp "$ovmf_path/OVMF_CODE.fd" .
 		cp "$ovmf_path/OVMF_VARS.fd" .
@@ -1607,15 +1606,13 @@ prepare_qcmd()
 	if [[ $_arg_log ]]; then
 		qcmd+=("-serial" "file:$_arg_log")
 	fi
-
-	if [[ $_arg_legacy_bios == "off" ]] || [[ $_arg_direct_kernel = "on" ]] ; then
-		if [[ $arch != "aarch64" ]]; then
-			get_ovmf_binaries
-			qcmd+=("-drive" "if=pflash,format=raw,unit=0,file=OVMF_CODE.fd,readonly=on")
-			qcmd+=("-drive" "if=pflash,format=raw,unit=1,file=OVMF_VARS.fd")
-			qcmd+=("-debugcon" "file:uefi_debug.log" "-global" "isa-debugcon.iobase=0x402")
-		fi
-		if [[ $arch == "aarch64" ]]; then
+	if [[ $_arg_legacy_bios == "off" ]] ; then
+                if [[ ${guest_arch_linux} == "x86_64" ]]; then
+		get_ovmf_binaries
+	        qcmd+=("-drive" "if=pflash,format=raw,unit=0,file=OVMF_CODE.fd,readonly=on")
+		qcmd+=("-drive" "if=pflash,format=raw,unit=1,file=OVMF_VARS.fd")
+		qcmd+=("-debugcon" "file:uefi_debug.log" "-global" "isa-debugcon.iobase=0x402")
+		elif [[ ${guest_arch_linux} == "arm64" ]]; then
 			get_aavmf_binaries
 			qcmd+=("-drive" "if=pflash,format=raw,unit=0,file=AAVMF_CODE.fd,readonly=on")
 			qcmd+=("-drive" "if=pflash,format=raw,unit=1,file=AAVMF_VARS.fd")
@@ -1648,9 +1645,7 @@ prepare_qcmd()
 
 	# If not "-cpu" option not set, Linux won't boot
 	#
-	if [[ $(arch) == "aarch64" ]]; then
-		qcmd+=("-cpu" "max")
-	fi
+	qcmd+=("-cpu" "max")
 
 	if [[ $_arg_cxl == "on" ]]; then
 		setup_cxl
