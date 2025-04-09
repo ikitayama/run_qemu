@@ -21,8 +21,6 @@ mkosi_opts=("-i" "-f")
 console="ttyS0"
 accel="kvm"
 
-arch=$(uname -m)
-
 # some canned hmat defaults - make configurable as/when needed
 # terminology:
 # local = attached directly to the socket in question
