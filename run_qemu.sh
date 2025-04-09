@@ -683,6 +683,7 @@ build_kernel_cmdline()
 		"initcall_debug"
 		"log_buf_len=20M"
 		"memory_hotplug.memmap_on_memory=force"
+                "memmap=1G$0x100000000"
 	)
 	if [[ $_arg_gdb == "on" ]]; then
 		kcmd+=( 
@@ -1536,7 +1537,7 @@ prepare_qcmd()
 	if [[ $(arch) != "aarch64" ]]; then
 		machine_args=("q35" "accel=$accel")
 	else
-		machine_args=("virt,highmem=on" "accel=$accel")
+		machine_args=("virt,highmem=on,gic-version=3" "accel=$accel")
 	fi
 
 	if [[ "$num_pmems" -gt 0 ]]; then
@@ -1586,8 +1587,7 @@ prepare_qcmd()
 	[[ $mac_lower =~ (..)(..)(..) ]] && guestmac+=("${BASH_REMATCH[@]:1}")
 	mac_addr=$(IFS=:; echo "${guestmac[*]}")
 
-	#qcmd+=("-device" "e1000,netdev=net0,mac=$mac_addr")
-	qcmd+=("-device" "virtio-net-pci,netdev=net0")
+	qcmd+=("-device" "e1000,netdev=net0,mac=$mac_addr")
 	qcmd+=("-netdev" "user,id=net0,hostfwd=tcp::$hostport-:22")
 
 	if [[ $_arg_kvm = "on" ]]; then
