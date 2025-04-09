@@ -411,6 +411,9 @@ process_options_logic()
 			_arg_timeout="20"
 		fi
 	fi
+
+	set_qmp
+
 	if [[ $_arg_git_qemu == "on" ]]; then
 		qemu=~/git/qemu/x86_64-softmmu/qemu-system-x86_64
 		qemu_img=~/git/qemu/qemu-img
