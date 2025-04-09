@@ -58,6 +58,8 @@ cxl_label_size="128K"
 num_build_cpus="$(($(getconf _NPROCESSORS_ONLN) + 1))"
 rsync_opts=("--delete" "--exclude=.git/" "--exclude=build/" "-L" "-r")
 
+set_qmp()
+{
 qemu_dir=$(dirname "$(dirname "$qemu")")
 if [[ $qemu_dir != . ]]; then
 	qemu_img="$qemu_dir/qemu-img"
@@ -77,6 +79,7 @@ else
 	# Back to the original setup
 	set -Ee
 fi
+}
 
 fail()
 {
