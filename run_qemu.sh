@@ -1607,11 +1607,11 @@ prepare_qcmd()
 		qcmd+=("-serial" "file:$_arg_log")
 	fi
 	if [[ $_arg_legacy_bios == "off" ]] ; then
-                if [[ ${guest_arch_linux} == "x86_64" ]]; then
-		get_ovmf_binaries
-	        qcmd+=("-drive" "if=pflash,format=raw,unit=0,file=OVMF_CODE.fd,readonly=on")
-		qcmd+=("-drive" "if=pflash,format=raw,unit=1,file=OVMF_VARS.fd")
-		qcmd+=("-debugcon" "file:uefi_debug.log" "-global" "isa-debugcon.iobase=0x402")
+		if [[ ${guest_arch_linux} == "x86_64" ]]; then
+			get_ovmf_binaries
+			qcmd+=("-drive" "if=pflash,format=raw,unit=0,file=OVMF_CODE.fd,readonly=on")
+			qcmd+=("-drive" "if=pflash,format=raw,unit=1,file=OVMF_VARS.fd")
+			qcmd+=("-debugcon" "file:uefi_debug.log" "-global" "isa-debugcon.iobase=0x402")
 		elif [[ ${guest_arch_linux} == "arm64" ]]; then
 			get_aavmf_binaries
 			qcmd+=("-drive" "if=pflash,format=raw,unit=0,file=AAVMF_CODE.fd,readonly=on")
