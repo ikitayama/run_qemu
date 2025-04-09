@@ -83,6 +83,7 @@ fi
 
 fail()
 {
+	printf 'FATAL: '
 	# shellcheck disable=SC2059
 	printf "$@"
 	printf '\n'
