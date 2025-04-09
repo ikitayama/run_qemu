@@ -848,6 +848,10 @@ update_rootfs_boot_kernel()
 		fail "Unable to determine root partition UUID, is the mkosi image 'Bootable'?"
 	fi
 
+	# systemd-boot
+
+	local conffile="$builddir/mnt/loader/entries/run-qemu-kernel-$kver.conf"
+
 	# Note there is no initrd when booting this way, root filesystem must be built-in.
 	build_kernel_cmdline "PARTUUID=$root_partuuid"
 	sudo tee "$conffile" > /dev/null <<- EOF
@@ -1066,7 +1070,7 @@ prepare_ndctl_build()
 	# supported. So, we concatenate. One drawback: you must manually delete
 	# qbuild/mkosi.postinst when changing this code below.
 	if test -e "$postinst" && grep -q 9b626c647037bc8a "$postinst"; then
-	      return
+	        return
 	fi
 	cat <<- 'EOF' >> "$postinst"
 		#!/bin/sh
@@ -1402,10 +1406,6 @@ options_from_file()
 
 get_ovmf_binaries()
 {
-	if [[ $_arg_legacy_bios == "on" ]]; then
-		return 0
-	fi
-
 	if [[ $_arg_forget_disks == "on" ]]; then
 		rm -f OVMF_*.fd
 	fi
