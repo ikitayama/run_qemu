@@ -9,6 +9,8 @@
 # github.com also has a powerful web editor that can be used without
 # committing.
 
+on:
+  workflow_dispatch:
 
 name: main test
 
