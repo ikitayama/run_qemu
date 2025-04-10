@@ -90,19 +90,16 @@ fail()
 
 set_qemu_machine()
 {
-	if test -n "$_arg_qmachine"; then
-		qemu_machine="$_arg_qmachine"
-		return
-	fi
-
+	# In the future we could override this with some new --qmachine option
+	# ARG_OPTIONAL_SINGLE([qmachine] ...
 	case "${host_arch}" in
 	    x86_64)
 		qemu_machine=q35
 		;;
-	    aarch)
+	    aarch64)
 		qemu_machine=virt
 		;;
-	    *) fail 'Unknown host architecture';;
+	    *) fail 'Unknown host architecture %s' "${host_arch}";;
 	esac
 }
 
@@ -113,16 +110,15 @@ set_guest_params()
 	    q35)
 		guest_arch_toolchain=x86_64
 		guest_arch_linux=x86_64
-		machine_args=('q35')
 		;;
 	    virt)
 		guest_arch_toolchain=aarch64
 		guest_arch_linux=arm64
-		machine_args=('virt')
 		;;
 	    *)
 		fail "Unknown QEMU machine=%s" "$qemu_machine";;
 	esac
+	machine_args=("${qemu_machine}")
 	test -n "$qemu" || qemu=qemu-system-"$guest_arch_linux"
 }
 
@@ -877,8 +873,9 @@ update_rootfs_boot_kernel()
 	# TODO: don't even bother when not using OVMF
 	sudo cp "$ovmf_path"/Shell.efi "$builddir"/mnt/shellx64.efi ||
 		# Arch Linux
-		sudo cp /usr/share/edk2-shell/x64/Shell_Full.efi "$builddir"/mnt/shellx64.efi ||
-		true
+		sudo cp /usr/share/edk2-shell/x64/Shell_Full.efi "$builddir"/mnt/shellx64.efi || {
+			printf 'Optional EDK2 shell not found, ignored.\n'
+		}
 
 	umount_rootfs 1
 
