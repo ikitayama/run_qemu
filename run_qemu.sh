@@ -5,7 +5,8 @@
 # default config
 : "${builddir:=./qbuild}"
 rootpw="root"
-rootfssize="10G"
+#rootfssize="10G"
+rootfssize="7G"
 espsize="512M"
 nvme_size="1G"
 efi_mem_size="2"   #in GiB
@@ -21,6 +22,8 @@ mkosi_opts=("-i" "-f")
 #console="ttyS0"
 console="ttyAMA0"
 accel="kvm"
+
+arch=$(uname -m)
 
 # some canned hmat defaults - make configurable as/when needed
 # terminology:
@@ -1521,6 +1524,19 @@ edk2_vmf_get_images()
 	fi
 }
 
+get_aavmf_binaries()
+{
+	if ! [ -e "AAVMF_CODE.fd" ] && ! [ -e "AAVMF_VARS.fd" ]; then
+                if [ ! -f "$aavmf_path/AAMVF_CODE.fd" ]; then
+                        echo "AAVMF binaries not found, please install '[edk2-]ovmf' or similar, 'edk2-shell', ..."
+                        exit 1
+                fi
+                cp "$aavmf_path/AAVMF_CODE.fd" .
+                cp "$aavmf_path/AAVMF_VARS.fd" .
+	fi
+	echo "done"
+}
+
 setup_nvme()
 {
 	local num="$1"
@@ -1691,11 +1707,8 @@ prepare_qcmd()
 		edk2_vmf_get_images
 		qcmd+=("-drive" "if=pflash,format=raw,unit=0,file=${edk2_vmf_code},readonly=on")
 		qcmd+=("-drive" "if=pflash,format=raw,unit=1,file=${edk2_vmf_vars}")
-		#qcmd+=("-debugcon" "file:uefi_debug.log" "-global" "isa-debugcon.iobase=0x402")
-	fi
 	qcmd+=("-drive" "file=$_arg_rootfs,format=raw,media=disk,if=none,id=hd0")
 	qcmd+=("-device" "virtio-blk-pci,drive=hd0,serial="dummyserial"")
-
 	if [ $_arg_direct_kernel = "on" ] && [ -n "$vmlinuz" ] && [ -n "$initrd" ]; then
 		qcmd+=("-kernel" "$vmlinuz" "-initrd" "$initrd")
 		qcmd+=("-append" "${kcmd[*]}")
@@ -1720,7 +1733,7 @@ prepare_qcmd()
 	# For arm64, if not -cpu is explicitly set Linux won't boot
 		qcmd+=("-cpu" "max")
 	fi
-
+        qcmd+=("-cpu" "cortex-a72")
 	if [[ $_arg_cxl == "on" ]]; then
 		setup_cxl
 	fi
