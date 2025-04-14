@@ -9,8 +9,6 @@
 # github.com also has a powerful web editor that can be used without
 # committing.
 
-on:
-  workflow_dispatch:
 
 name: main test
 
@@ -37,7 +35,7 @@ jobs:
             img_distro: ubuntu
             img_rel: noble
         arch: [x86_64]
-        run_opts: [--cxl-test --ndctl-build]
+        run_opts: [--cxl-test-run --ndctl-build]
 
     steps:
       - uses: actions/checkout@v4
@@ -64,7 +62,7 @@ jobs:
           cd /usr/lib/python3/dist-packages
           sudo git apply "${{ github.workspace }}"/run_qemu/Patches/ubuntu/24.04/mkosi/*.patch
 
-      - name: apt install Ubuntu 24 requirements for mkosi
+      - name: apt install Ubuntu 24.04 requirements for mkosi
         if: matrix.cfg.os  == 'ubuntu-24.04'
         run: |
            # systemd was monolithic in Ubunutu 22
@@ -91,7 +89,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: pmem/ndctl
-          ref: v80
+          ref: v81
           path: ndctl
 
       - name: download kernel
@@ -99,7 +97,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: torvalds/linux
-          ref: v6.12
+          ref: v6.15-rc1
           path: kernel
 
       - name: set week number for ccache
@@ -158,6 +156,15 @@ jobs:
           cd kernel
           PATH=/usr/lib/ccache:"$PATH" make -j $(nproc)
 
+      # Required for rq_autorun.
+      # It's not clear why mkosi v12 does not do this (v14 seems to work)
+      - name: manual "systemctl preset-all" on Ubuntu 22.04
+        if: matrix.cfg.os  == 'ubuntu-22.04'
+        run: |
+          mkdir -p kernel/qbuild
+          printf 'systemctl preset-all\n' >> kernel/qbuild/mkosi.postinst
+          chmod a+x kernel/qbuild/mkosi.postinst
+
       - name: run_qemu.sh
         run: |
           set -x
@@ -165,18 +172,13 @@ jobs:
           ccache --show-stats
           cp run_qemu/contrib/tmpfs_workspace.tmpl run_qemu/mkosi_tmpl_portable/
           cd kernel
+
+          # --no-kvm is very slow but required to "stack" QEMUlation on top of a virtual GitHub runner
+          # At "home", use KVM and this instead: sudo usermod -a -G kvm $(id -u -n)
           PATH=/usr/lib/ccache:"$PATH" \
           distro=${{ matrix.cfg.img_distro }} rev=${{ matrix.cfg.img_rel }} \
                  ndctl='${{ github.workspace }}'/ndctl \
-                 ../run_qemu/run_qemu.sh -v --no-run ${{ matrix.run_opts }}
-
-      # In GitHub runner VMs, with --run:
-      #   qemu-system-x86_64: failed to initialize kvm: Permission denied
-
-      # This is required on a plain Ubuntu system but is blocked on Github runners.
-      # sudo usermod -a -G kvm $(id -u -n)
-
-      # It would probably not work anyway without "nested KVM".
+                 ../run_qemu/run_qemu.sh ${{ matrix.run_opts }} --no-kvm
 
       - name: ccache stats post build
         run: |
@@ -184,4 +186,3 @@ jobs:
           set -x
           ccache --show-stats
           ccache --show-config | grep dir
-
