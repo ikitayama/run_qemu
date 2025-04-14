@@ -4,7 +4,6 @@
 echo "This is just a parsing library template, not the library - pass this file to 'argbash' to fix this." >&2
 exit 11  #)Created by argbash-init v2.9.0
 # Rearrange the order of options below according to what you would like to see in the help message.
-# ARG_OPTIONAL_SINGLE([qmachine], , [QEMU machine: q35, virt,... Defaults to host architecture])
 # ARG_OPTIONAL_SINGLE([rootfs], , [Non-default rootfs image to use], [root.img])
 # ARG_OPTIONAL_SINGLE([rebuild], [r], [Choose one of:\n wipe: wipe builddir, removing package cache\n imgcache: remove mkosi's cached pre-images to rebuild the image without an 'incremental build'\n img: rebuild rootfs from scratch and kernel\n kmod: rebuild kernel, update rootfs modules\n none: don't rebuild anything, start qemu\n], [kmod])
 # ARG_OPTIONAL_BOOLEAN([strip-modules], , [Strip kernel modules after they are installed], [off])
@@ -22,7 +21,7 @@ exit 11  #)Created by argbash-init v2.9.0
 # ARG_OPTIONAL_SINGLE([kcmd-append], , [Same as 'kcmd-replace' above, except keep the initial command line supplied in this script,\n and append to it using options listed in FILE], )
 # ARG_OPTIONAL_SINGLE([instance], [n], [Instance ID - Offset the ssh port number for the 'hostfwd' argument passed to qemu.\n Offset '0' imlies port '10022'.\n This allows running multiple instances of the script], [0])
 # ARG_OPTIONAL_SINGLE([timeout], [t], [Timeout (in minutes) after which the guest is forcibly killed\n '0' to disable any timeout (i.e. normal interactive operation).\n Implies --qmp and requires qmp-shell, see --qmp], [0])
-# ARG_OPTIONAL_SINGLE([autorun], [A], [Set up FILE as a systemd startup script that is run automatically after boot\n Needs rebuild={kmod,img,wipe}], )
+# ARG_OPTIONAL_SINGLE([autorun], [A], [Set up FILE as a systemd startup executable that is run automatically after boot\n FILE is copied from the host to /usr/local/bin/ on the guest.\n Needs rebuild={kmod,img,wipe}], )
 # ARG_OPTIONAL_SINGLE([post-script], , [run FILE at the end of the script. If --log was\n provided, pass the logfile as the first argument], )
 # ARG_OPTIONAL_SINGLE([log], [l], [Output the qemu console to FILE instead of stdout], )
 # ARG_OPTIONAL_BOOLEAN([hmat], [H], [Setup an HMAT table in qemu], )
@@ -47,7 +46,7 @@ exit 11  #)Created by argbash-init v2.9.0
 # ARG_OPTIONAL_BOOLEAN([cmdline], , [Print the final qemu command line, but don't start qemu], )
 # ARG_OPTIONAL_BOOLEAN([nfit-test-run], , [NFIT unit test mode. Implies the following:\n nfit-test\n autorun=rq_nfit_tests.sh\n log=/tmp/rq_<instance>.log\n post-script=rq_nfit_results.sh\n timeout=20\n Non-boolean parameters above can be overridden by manually supplying the corresponding option(s)\n], )
 # ARG_OPTIONAL_BOOLEAN([nfit-debug], , [Turn on extra debugging for nvdimm\n This turns on *.dyndbg for all nvdimm/nfit related modules], )
-# ARG_OPTIONAL_BOOLEAN([legacy-bios], [L], [Use legacy BIOS instead of the default OVMF], )
+# ARG_OPTIONAL_BOOLEAN([legacy-bios], [L], [Do not start QEMU with EDK2 images (OVMF). This is independent of --direct-kernel.], )
 # ARG_OPTIONAL_BOOLEAN([forget-disks], , [Force re-creation of disk images for attached hardware\n (such as nvme disks, pmem DIMMs, OVMF binaries, etc.)], )
 # ARG_OPTIONAL_BOOLEAN([run], , [actually launch qemu], [on])
 # ARG_OPTIONAL_BOOLEAN([direct-kernel], , [Boot the rootfs image directly by supplying a kernel to qemu using '-kernel'], [on])
