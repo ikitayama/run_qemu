@@ -18,7 +18,8 @@ pmem_final_size="$((pmem_size + pmem_label_size))"
 selftests_home=root/built-selftests
 : "${mkosi_bin:=mkosi}"
 mkosi_opts=("-i" "-f")
-console="ttyS0"
+#console="ttyS0"
+console="ttyAMA0"
 accel="kvm"
 
 # some canned hmat defaults - make configurable as/when needed
@@ -1520,23 +1521,6 @@ edk2_vmf_get_images()
 	fi
 }
 
-get_aavmf_binaries()
-{
-	if [[ ! $aavmf_path ]]; then
-		echo "Unable to determine AAVMF path for $_distro"
-		exit 1
-        fi
-	if ! [ -e "AAVMF_CODE.fd" ] && ! [ -e "AAVMF_VARS.fd" ]; then
-                if [ ! -f "$aavmf_path/AAVMF_CODE.fd" ]; then
-                        echo "AAVMF binaries not found, please install '[edk2-]ovmf' or similar, 'edk2-shell', ..."
-                        exit 1
-                fi
-                cp "$aavmf_path/AAVMF_CODE.fd" .
-                cp "$aavmf_path/AAVMF_VARS.fd" .
-	fi
-	echo "done"
-}
-
 setup_nvme()
 {
 	local num="$1"
@@ -1700,12 +1684,14 @@ prepare_qcmd()
 	qcmd+=("-display" "none" "$dispmode")
 	if [[ $_arg_log ]]; then
 		qcmd+=("-serial" "file:$_arg_log")
+	else
+		qcmd+=("-serial" "mon:stdio")
 	fi
 	if [[ $_arg_legacy_bios == "off" ]] ; then
 		edk2_vmf_get_images
 		qcmd+=("-drive" "if=pflash,format=raw,unit=0,file=${edk2_vmf_code},readonly=on")
 		qcmd+=("-drive" "if=pflash,format=raw,unit=1,file=${edk2_vmf_vars}")
-		qcmd+=("-debugcon" "file:uefi_debug.log" "-global" "isa-debugcon.iobase=0x402")
+		#qcmd+=("-debugcon" "file:uefi_debug.log" "-global" "isa-debugcon.iobase=0x402")
 	fi
 	qcmd+=("-drive" "file=$_arg_rootfs,format=raw,media=disk,if=none,id=hd0")
 	qcmd+=("-device" "virtio-blk-pci,drive=hd0,serial="dummyserial"")
