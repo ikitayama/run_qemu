@@ -21,8 +21,6 @@ mkosi_opts=("-i" "-f")
 console="ttyS0"
 accel="kvm"
 
-arch=$(uname -m)
-
 # some canned hmat defaults - make configurable as/when needed
 # terminology:
 # local = attached directly to the socket in question
@@ -1496,7 +1494,7 @@ edk2_vmf_configure()
 	       [ ! -e "${edk2_vmf_path}/${edk2_vmf_vars}" ]; then
 
 		>&2 printf '\nWARNING: %s or %s not found in %s.
-Install the [edk2-]%s package or similar use --legacy-bios\n\n' \
+Install the [edk2-]%s package or similar, or provide edk2_vmf_path or use --legacy-bios\n\n' \
 		"${edk2_vmf_code}" "${edk2_vmf_vars}" \
 		"${edk2_vmf_path}" "${pkg_suffix}"
 		sleep 3
@@ -1514,29 +1512,12 @@ edk2_vmf_get_images()
 	if ! [ -e "$edk2_vmf_code" ] && ! [ -e "$edk2_vmf_vars" ]; then
 		# Copy distro files
 		if [ ! -f "${edk2_vmf_path}/${edk2_vmf_code}" ]; then
-			fail 'EDK2 xVMF *.fd binaries not found in neither %s nor %s' \
+			fail 'EDK2 xVMF *.fd binaries found in neither %s nor %s' \
 			     "$(pwd)" "${edk2_vmf_path}/"
 		fi
 		cp "${edk2_vmf_path}/${edk2_vmf_code}" .
 		cp "${edk2_vmf_path}/${edk2_vmf_vars}" .
 	fi
-}
-
-get_aavmf_binaries()
-{
-	if [[ ! $aavmf_path ]]; then
-		echo "Unable to determine AAVMF path for $_distro"
-		exit 1
-        fi
-	if ! [ -e "AAVMF_CODE.fd" ] && ! [ -e "AAVMF_VARS.fd" ]; then
-                if [ ! -f "$aavmf_path/AAVMF_CODE.fd" ]; then
-                        echo "AAVMF binaries not found, please install '[edk2-]ovmf' or similar, 'edk2-shell', ..."
-                        exit 1
-                fi
-                cp "$aavmf_path/AAVMF_CODE.fd" .
-                cp "$aavmf_path/AAVMF_VARS.fd" .
-	fi
-	echo "done"
 }
 
 setup_nvme()
@@ -1734,12 +1715,6 @@ prepare_qcmd()
 		qcmd+=("-cpu" "host")
 	else
 	# For arm64, if not -cpu is explicitly set Linux won't boot
-		qcmd+=("-cpu" "max")
-	fi
-
-	# If not "-cpu" option not set, Linux won't boot
-	#
-	if [[ $(arch) == "aarch64" ]]; then
 		qcmd+=("-cpu" "max")
 	fi
 
