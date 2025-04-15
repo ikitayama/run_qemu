@@ -1690,6 +1690,7 @@ prepare_qcmd()
 		edk2_vmf_get_images
 		qcmd+=("-drive" "if=pflash,format=raw,unit=0,file=${edk2_vmf_code},readonly=on")
 		qcmd+=("-drive" "if=pflash,format=raw,unit=1,file=${edk2_vmf_vars}")
+	fi
 	qcmd+=("-drive" "file=$_arg_rootfs,format=raw,media=disk,if=none,id=hd0")
 	qcmd+=("-device" "virtio-blk-pci,drive=hd0,serial="dummyserial"")
 
